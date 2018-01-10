@@ -15,7 +15,7 @@ getGamesByDate <- function(year,month,day) {
                                         gsub("/.html","",gsub("/cbb/schools/","",gsub("[0-9]","",links))),
                                         tolower(gsub("\\s", "-",gsub("  "," ",gsub("[^a-zA-Z0-9 \\-]", "",names))))))
   game_names %<>% mutate(names = ifelse(names == "Final", links, temp)) %>% select(names,flag,flag)
-  game_names %<>% mutate(names = ifelse(names %in% exceptions, exceptions[names], names))
+  game_names %<>% mutate(names = ifelse(names %in% names(exceptions), exceptions[names], names))
   addresses <- game_names[seq(2,nrow(game_names),3),1]
   a_teams   <- game_names[seq(1,nrow(game_names),3),1]
   b_teams   <- game_names[seq(3,nrow(game_names),3),1]
