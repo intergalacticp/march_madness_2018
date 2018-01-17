@@ -25,30 +25,35 @@ getGamesByDate <- function(year,month,day) {
   # All a under table.teams are either detailed game links or team links
   games <- html_nodes(parse_doc,"table.teams") %>%
     html_nodes("a")
-  # Get both text and attributes for scraping
-  game_names <- data.frame(names = games %>% html_text(), links = games %>% html_attrs() %>% as.character())
-  # Create flag for text without links; these teams have no detailed pages
-  # Create temp variable; this is the approximation of the name used by sports-reference to construct html later
-  game_names %<>% mutate(flag = ifelse(links != "character(0)", 0, 1), temp = ifelse(links != "character(0)", 
-                                        # For linked teams, use the school name in the link
-                                        gsub("/.html","",gsub("/cbb/schools/","",gsub("[0-9]","",links))),
-                                        # For unlinked teams, use regex to get alphanumeric, substitute spaces
-                                        # with dashes, set to lowercase
-                                        tolower(gsub("\\s", "-",gsub("  "," ",gsub("[^a-zA-Z0-9 \\-]", "",names))))))
-  # Links to the detailed game page are named "Final", we want their link, otherwise take the temp field
-  game_names %<>% mutate(names = ifelse(names == "Final", links, temp)) %>% select(names,flag,flag)
-  # If the name is in the exceptions list, the html tables don't use the linked team name. Set in define_parameters.R
-  game_names %<>% mutate(names = ifelse(names %in% names(exceptions), exceptions[names], names))
-  # Every three rows are together, so spread these each into a column
-  addresses <- game_names[seq(2,nrow(game_names),3),1]
-  a_teams   <- game_names[seq(1,nrow(game_names),3),1]
-  b_teams   <- game_names[seq(3,nrow(game_names),3),1]
-  a_flags   <- game_names[seq(1,nrow(game_names),3),2]
-  b_flags   <- game_names[seq(3,nrow(game_names),3),2]
-  # Make it a dataframe, add date
-  games <- data.frame(address = addresses, a_team = a_teams, b_team = b_teams, a_flag = a_flags, b_flag = b_flags)
-  games <- games %>% mutate(date = as.Date(paste0(year, "-", month, "-", day)))
-  return(games)
+  if(length(games)>0){
+    # Get both text and attributes for scraping
+    game_names <- data.frame(names = games %>% html_text(), links = games %>% html_attrs() %>% as.character())
+    # Create flag for text without links; these teams have no detailed pages
+    # Create temp variable; this is the approximation of the name used by sports-reference to construct html later
+    game_names %<>% mutate(flag = ifelse(links != "character(0)", 0, 1), temp = ifelse(links != "character(0)", 
+                                          # For linked teams, use the school name in the link
+                                          gsub("/.html","",gsub("/cbb/schools/","",gsub("[0-9]","",links))),
+                                          # For unlinked teams, use regex to get alphanumeric, substitute spaces
+                                          # with dashes, set to lowercase
+                                          tolower(gsub("\\s", "-",gsub("  "," ",gsub("[^a-zA-Z0-9 \\-]", "",names))))))
+    # Links to the detailed game page are named "Final", we want their link, otherwise take the temp field
+    game_names %<>% mutate(names = ifelse(names == "Final", links, temp)) %>% select(names,flag,flag)
+    # If the name is in the exceptions list, the html tables don't use the linked team name. Set in define_parameters.R
+    game_names %<>% mutate(names = ifelse(names %in% names(exceptions), exceptions[names], names))
+    # Every three rows are together, so spread these each into a column
+    addresses <- game_names[seq(2,nrow(game_names),3),1]
+    a_teams   <- game_names[seq(1,nrow(game_names),3),1]
+    b_teams   <- game_names[seq(3,nrow(game_names),3),1]
+    a_flags   <- game_names[seq(1,nrow(game_names),3),2]
+    b_flags   <- game_names[seq(3,nrow(game_names),3),2]
+    # Make it a dataframe, add date
+    game_return <- data.frame(address = addresses, a_team = a_teams, b_team = b_teams, a_flag = a_flags, b_flag = b_flags)
+    game_return <- game_return %>% mutate(date = as.Date(paste0(year, "-", month, "-", day)))
+    return(game_return)
+  }
+  else {
+    return(data.frame())
+  }
 }
 
 ##########################################################
@@ -59,13 +64,14 @@ getGamesByDateRange <- function(startDate, endDate) {
   # Get sequence of dates between start and end
   dates <- seq(as.Date(startDate),
                as.Date(endDate), "days")
-  games <- data.frame(address = character())
+  game_df <- data.frame()
   # Iterate through sequence and bind output of getGamesByDate to output dataframe
   for(date in dates){
+    date
     date <- as.Date(date, origin="1970-01-01")
-    games <- rbind(games,getGamesByDate(year(date),month(date),day(date)))
+    game_df <- rbind(game_df,getGamesByDate(year(date),month(date),day(date)))
   }
-  return(games)
+  return(game_df)
 }
 
 #######################################################################
