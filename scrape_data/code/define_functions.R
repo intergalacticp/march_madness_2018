@@ -84,8 +84,8 @@ getBoxScoreByGame <- function(address, a_team, b_team) {
   away_team <- a_team
   home_team <- b_team
   # Call getTeamBox given the page document and html team name
-  away_box  <- getTeamBox(parse_doc, away_team)
-  home_box  <- getTeamBox(parse_doc, home_team)
+  away_box  <- getTeamBox(parse_doc, away_team, 1)
+  home_box  <- getTeamBox(parse_doc, home_team, 2)
   boxes     <- list(away_box, home_box)
   return(boxes)
 }
@@ -94,9 +94,9 @@ getBoxScoreByGame <- function(address, a_team, b_team) {
 ### Given a document and html team name, return box score ###
 #############################################################
 
-getTeamBox <- function(parse_doc, team_name){
+getTeamBox <- function(parse_doc, team_name, order){
   # Box scores are located at table#box-score-basic-team-name
-  team_box  <- html_nodes(parse_doc, "table#box-score-basic-" %p% team_name) %>% html_table()
+  team_box  <- html_nodes(parse_doc, "table[id^='box-score-basic']")[[order]] %>% html_table()
   # html_table produces a list, we just want the table
   team_box  <- team_box[[1]]
   # the first row read by html_table is the column names
