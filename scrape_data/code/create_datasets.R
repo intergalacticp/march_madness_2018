@@ -13,7 +13,7 @@ player_game_data <- data.frame()
 game_data   <- data.frame()
 
 # Iterate through game list
-for (row in 18734:nrow(game_list)){
+for (row in 1:nrow(game_list)){
   address    <- game_list[row, "address"]
   a_team     <- game_list[row, "a_team"]
   b_team     <- game_list[row, "b_team"]
